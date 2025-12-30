@@ -52,7 +52,14 @@ A full-stack social media application built using the MERN stack with real-time 
 
 1. cd frontend
 2. npm install
-3. npm start
+3. npm run build
+4. npm start
+
+## Copy Build to Backend
+
+1. cd ..
+2. mkdir backend\public
+3. xcopy frontend\build backend\public /E /I
 
 ### Thanking You Sir/Mam.....
 
