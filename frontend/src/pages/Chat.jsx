@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
 import API from "../api/api";
 
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 export default function Chat() {
   const { id: receiverId } = useParams();
   const navigate = useNavigate();
@@ -15,16 +18,12 @@ export default function Chat() {
 
   const messagesEndRef = useRef(null);
 
-  /* =========================
-     JOIN SOCKET ONCE
-  ========================= */
   useEffect(() => {
-    if (myId) socket.emit("join", myId);
+    if (myId && socket) {
+      socket.emit("join", myId);
+    }
   }, [myId]);
 
-  /* =========================
-     SOCKET LISTENER (REALTIME)
-  ========================= */
   useEffect(() => {
     const handleReceive = (msg) => {
       const senderId = msg.sender?._id || msg.sender;
@@ -42,9 +41,6 @@ export default function Chat() {
     return () => socket.off("receiveMessage", handleReceive);
   }, [receiverId]);
 
-  /* =========================
-     LOAD CHAT USERS
-  ========================= */
   useEffect(() => {
     if (receiverId) return;
 
@@ -53,9 +49,6 @@ export default function Chat() {
       .catch(() => console.error("Failed to load chat users"));
   }, [receiverId]);
 
-  /* =========================
-     LOAD MESSAGES (ON OPEN)
-  ========================= */
   useEffect(() => {
     if (!receiverId) return;
 
@@ -64,16 +57,10 @@ export default function Chat() {
       .catch(() => console.error("Failed to load messages"));
   }, [receiverId]);
 
-  /* =========================
-     AUTO SCROLL
-  ========================= */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* =========================
-     SEND MESSAGE (NO WARNING)
-  ========================= */
   const sendMessage = async () => {
     if (!text.trim()) return;
 
@@ -83,15 +70,12 @@ export default function Chat() {
         text,
       });
 
-      setText(""); // socket updates UI
+      setText("");
     } catch {
       console.error("Send message failed");
     }
   };
 
-  /* =========================
-     DELETE CHAT
-  ========================= */
   const deleteChat = async (userId) => {
     if (!window.confirm("Delete entire chat?")) return;
 
@@ -107,21 +91,18 @@ export default function Chat() {
     }
   };
 
-  /* =========================
-     RENDER
-  ========================= */
-
   return (
     <div className="container mt-4">
       <div className="card p-3">
-        {/* ===== CHAT USERS LIST ===== */}
         {!receiverId && (
           <>
             <h5>Chat Users 👥</h5>
-            <br></br>
+            <br />
+
             {chatUsers.length === 0 && (
               <p className="text-muted">No conversations yet 🥺</p>
             )}
+
             {chatUsers.map((u) => (
               <div
                 key={u._id}
@@ -131,7 +112,7 @@ export default function Chat() {
                   <img
                     src={
                       u.profilePic
-                        ? `http://localhost:5000/uploads/${u.profilePic}`
+                        ? `${BACKEND_URL}/uploads/${u.profilePic}`
                         : "https://via.placeholder.com/40"
                     }
                     width="40"
@@ -162,7 +143,6 @@ export default function Chat() {
           </>
         )}
 
-        {/* ===== CHAT WINDOW ===== */}
         {receiverId && (
           <>
             <div style={{ height: "350px", overflowY: "auto" }}>
@@ -171,7 +151,7 @@ export default function Chat() {
                 const mine = senderId === myId;
 
                 const profilePic = m.sender?.profilePic
-                  ? `http://localhost:5000/uploads/${m.sender.profilePic}`
+                  ? `${BACKEND_URL}/uploads/${m.sender.profilePic}`
                   : "https://via.placeholder.com/32";
 
                 return (

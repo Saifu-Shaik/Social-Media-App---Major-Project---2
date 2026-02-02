@@ -12,10 +12,9 @@ export default function VerifySignup() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* =========================
-     LOAD QR DATA
-  ========================= */
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const storedUserId = localStorage.getItem("signupUserId");
     const storedQr = localStorage.getItem("signupQr");
 
@@ -28,9 +27,6 @@ export default function VerifySignup() {
     setQrCode(storedQr);
   }, []);
 
-  /* =========================
-     VERIFY OTP
-  ========================= */
   const verifyOtp = async () => {
     if (otp.length !== 6) {
       setError("OTP must be 6 digits");
@@ -46,13 +42,11 @@ export default function VerifySignup() {
         token: otp,
       });
 
-      /* cleanup */
       localStorage.removeItem("signupUserId");
       localStorage.removeItem("signupQr");
 
       alert("Signup verified successfully. Please login.");
 
-      /* ✅ CLEAN REDIRECT */
       navigate("/login", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Invalid OTP");
@@ -61,9 +55,6 @@ export default function VerifySignup() {
     }
   };
 
-  /* =========================
-     UI STATES
-  ========================= */
   if (error && !qrCode) {
     return (
       <div className="container mt-5 text-center text-danger">
@@ -86,9 +77,6 @@ export default function VerifySignup() {
     );
   }
 
-  /* =========================
-     MAIN UI
-  ========================= */
   return (
     <div className="container mt-5 text-center" style={{ maxWidth: "420px" }}>
       <div className="card p-4">
@@ -105,7 +93,9 @@ export default function VerifySignup() {
           className="form-control mb-2"
           placeholder="Enter 6-digit OTP"
           value={otp}
-          onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          onChange={(e) =>
+            setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+          }
           maxLength={6}
         />
 

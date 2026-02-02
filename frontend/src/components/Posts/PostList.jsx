@@ -5,7 +5,16 @@ export default function PostList() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    API.get("/posts").then((res) => setPosts(res.data));
+    const fetchPosts = async () => {
+      try {
+        const res = await API.get("/posts");
+        setPosts(res.data);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      }
+    };
+
+    fetchPosts();
   }, []);
 
   return (
@@ -13,7 +22,7 @@ export default function PostList() {
       {posts.map((post) => (
         <div key={post._id} className="card mb-2">
           <div className="card-body">
-            <strong>{post.user.username}</strong>
+            <strong>{post.user?.username}</strong>
             <p>{post.text}</p>
           </div>
         </div>

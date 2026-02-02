@@ -9,16 +9,15 @@ export default function VerifyLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const userId = localStorage.getItem("loginUserId");
+  const userId =
+    typeof window !== "undefined" ? localStorage.getItem("loginUserId") : null;
 
-  /* ================= REDIRECT SAFETY ================= */
   useEffect(() => {
     if (!userId) {
       navigate("/login", { replace: true });
     }
   }, [userId, navigate]);
 
-  /* ================= VERIFY OTP ================= */
   const verifyOtp = async () => {
     if (otp.length !== 6) {
       setError("OTP must be exactly 6 digits");
@@ -34,16 +33,12 @@ export default function VerifyLogin() {
         token: otp,
       });
 
-      /* ✅ SAVE TOKEN */
       localStorage.setItem("token", res.data.token);
 
-      /* 🔥 NOTIFY HEADER (NO REFRESH NEEDED) */
       window.dispatchEvent(new Event("auth-change"));
 
-      /* cleanup */
       localStorage.removeItem("loginUserId");
 
-      /* redirect */
       navigate("/home", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Invalid OTP");
@@ -52,13 +47,12 @@ export default function VerifyLogin() {
     }
   };
 
-  /* ================= UI ================= */
   return (
     <div className="container mt-5 text-center" style={{ maxWidth: "400px" }}>
       <h4 className="mb-3"> Go With! Login Verification Here 🔒</h4>
       👉👉👉👉👉
-      <br></br>
-      <br></br>
+      <br />
+      <br />
       <b>Please Enter Your Otp From Google Authenticator App: 🙍🏻‍♂️</b>
       <input
         className="form-control mb-2 mt-3 text-center"

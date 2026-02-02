@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 export default function UserProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -14,7 +17,6 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  /* ================= FETCH PROFILE + POSTS ================= */
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,7 +42,6 @@ export default function UserProfile() {
     fetchProfile();
   }, [fetchProfile]);
 
-  /* ================= FOLLOW / UNFOLLOW ================= */
   const toggleFollow = async () => {
     try {
       setActionLoading(true);
@@ -60,7 +61,6 @@ export default function UserProfile() {
   if (!user)
     return <h5 className="text-center mt-5 text-danger">User not found</h5>;
 
-  /* ================= OPEN CHAT ================= */
   const openChat = () => {
     if (!user?._id) return;
     navigate(`/chat/${user._id}`);
@@ -69,13 +69,12 @@ export default function UserProfile() {
   return (
     <div className="container-fluid mt-4">
       <div className="row">
-        {/* ================= LEFT : PROFILE ================= */}
         <div className="col-md-6">
           <div className="card p-4 text-center h-100">
             <img
               src={
                 user.profilePic
-                  ? `http://localhost:5000/uploads/${user.profilePic}`
+                  ? `${BACKEND_URL}/uploads/${user.profilePic}`
                   : "https://via.placeholder.com/150"
               }
               width="140"
@@ -104,7 +103,6 @@ export default function UserProfile() {
                       : "Follow"}
                 </button>
 
-                {/* ✅ MESSAGE BUTTON */}
                 <button
                   className="btn btn-outline-success w-50 mx-auto"
                   onClick={openChat}
@@ -129,12 +127,10 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* ================= DIVIDER ================= */}
         <div className="d-none d-md-block col-md-1 d-flex justify-content-center">
           <div style={{ width: "2px", background: "#ddd", height: "100%" }} />
         </div>
 
-        {/* ================= RIGHT : POSTS ================= */}
         <div className="col-md-5">
           <h4 className="mb-3">Posts 📝 :</h4>
 
@@ -149,7 +145,7 @@ export default function UserProfile() {
             >
               {p.image && (
                 <img
-                  src={`http://localhost:5000/uploads/${p.image}`}
+                  src={`${BACKEND_URL}/uploads/${p.image}`}
                   className="card-img-top"
                   alt="post"
                 />

@@ -22,7 +22,9 @@ import GlobalLoader from "./components/GlobalLoader";
 function AppRoutes() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("token") : null,
+  );
 
   useEffect(() => {
     setLoading(true);

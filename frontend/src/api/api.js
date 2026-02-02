@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.REACT_APP_BACKEND_URL
+    ? `${process.env.REACT_APP_BACKEND_URL}/api`
+    : "http://localhost:5000/api",
 });
 
 API.interceptors.request.use(
@@ -14,7 +16,7 @@ API.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 API.interceptors.response.use(
@@ -24,7 +26,7 @@ API.interceptors.response.use(
       localStorage.clear();
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default API;

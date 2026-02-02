@@ -3,10 +3,9 @@ import { useEffect, useState } from "react";
 
 export default function ProtectedRoute({ children }) {
   const [token, setToken] = useState(() =>
-    localStorage.getItem("token")
+    typeof window !== "undefined" ? localStorage.getItem("token") : null,
   );
 
-  /* 🔥 Sync token without refresh */
   useEffect(() => {
     const syncToken = () => {
       setToken(localStorage.getItem("token"));

@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/api";
 
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -14,7 +17,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* ================= FETCH PROFILE + POSTS ================= */
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,14 +42,12 @@ export default function Profile() {
     fetchProfile();
   }, [fetchProfile]);
 
-  /* ================= CLEAN PREVIEW MEMORY ================= */
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
     };
   }, [preview]);
 
-  /* ================= UPDATE PROFILE ================= */
   const updateProfile = async () => {
     try {
       setError("");
@@ -68,7 +68,6 @@ export default function Profile() {
     }
   };
 
-  /* ================= DELETE POST (OWNER ONLY) ================= */
   const deletePost = async (postId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this post?",
@@ -84,7 +83,6 @@ export default function Profile() {
     }
   };
 
-  /* ================= UNFOLLOW ================= */
   const unfollowUser = async (id) => {
     try {
       await API.post(`/users/unfollow/${id}`);
@@ -94,7 +92,6 @@ export default function Profile() {
     }
   };
 
-  /* ================= STATES ================= */
   if (loading) {
     return <h5 className="text-center mt-5">Loading profile...</h5>;
   }
@@ -103,11 +100,9 @@ export default function Profile() {
     return <h5 className="text-danger text-center">Profile not found</h5>;
   }
 
-  /* ================= UI ================= */
   return (
     <div className="container mt-4">
       <div className="row">
-        {/* LEFT : PROFILE */}
         <div className="col-md-4">
           <div className="card p-4">
             <h5 className="mb-3">Your Profile Details 👤 :</h5>
@@ -120,7 +115,7 @@ export default function Profile() {
                   preview
                     ? preview
                     : user.profilePic
-                      ? `http://localhost:5000/uploads/${user.profilePic}?t=${Date.now()}`
+                      ? `${BACKEND_URL}/uploads/${user.profilePic}?t=${Date.now()}`
                       : "https://via.placeholder.com/120"
                 }
                 width="120"
@@ -170,9 +165,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* RIGHT : FOLLOW + POSTS */}
         <div className="col-md-8">
-          {/* FOLLOWERS */}
           <div className="card mb-3">
             <div className="card-header">
               <b>Followers ({user.followers?.length || 0}) 👥</b>
@@ -195,7 +188,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* FOLLOWING */}
           <div className="card mb-4">
             <div className="card-header">
               <b>Following ({user.following?.length || 0}) 👥</b>
@@ -228,7 +220,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* POSTS */}
           <h5>Your Posts 📝:</h5>
           {posts.length === 0 && (
             <p className="text-muted mt-3">No posts yet 📝</p>
@@ -240,7 +231,7 @@ export default function Profile() {
                 <div className="card h-100">
                   {p.image && (
                     <img
-                      src={`http://localhost:5000/uploads/${p.image}`}
+                      src={`${BACKEND_URL}/uploads/${p.image}`}
                       className="card-img-top"
                       alt="post"
                     />
@@ -253,7 +244,6 @@ export default function Profile() {
                         ❤️ {p.likes?.length || 0} likes
                       </small>
 
-                      {/* 🔥 DELETE BUTTON (OWNER ONLY) */}
                       <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => deletePost(p._id)}

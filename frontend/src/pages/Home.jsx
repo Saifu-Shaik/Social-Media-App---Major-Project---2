@@ -2,6 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState("");
@@ -16,7 +19,6 @@ export default function Home() {
   const highlightedPostId = location.state?.postId;
   const token = localStorage.getItem("token");
 
-  /* ================= FETCH FEED ================= */
   const fetchPosts = async () => {
     try {
       const res = await API.get("/posts");
@@ -30,7 +32,6 @@ export default function Home() {
     fetchPosts();
   }, []);
 
-  /* ================= SCROLL TO POST ================= */
   useEffect(() => {
     if (highlightedPostId) {
       setTimeout(() => {
@@ -41,7 +42,6 @@ export default function Home() {
     }
   }, [posts, highlightedPostId]);
 
-  /* ================= AUTH GUARD ================= */
   const requireAuth = () => {
     if (!token) {
       alert("Please login or signup first");
@@ -51,7 +51,6 @@ export default function Home() {
     return true;
   };
 
-  /* ================= CREATE POST ================= */
   const createPost = async () => {
     if (!requireAuth()) return;
     if (!text.trim() && !image) return;
@@ -63,7 +62,6 @@ export default function Home() {
     try {
       await API.post("/posts", formData);
 
-      // clear form completely
       setText("");
       setImage(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -74,7 +72,6 @@ export default function Home() {
     }
   };
 
-  /* ================= LIKE ================= */
   const likePost = async (id) => {
     if (!requireAuth()) return;
 
@@ -86,7 +83,6 @@ export default function Home() {
     }
   };
 
-  /* ================= COMMENT ================= */
   const addComment = async (id) => {
     if (!requireAuth()) return;
     if (!commentText[id]?.trim()) return;
@@ -105,7 +101,6 @@ export default function Home() {
 
   return (
     <div className="container mt-4" style={{ maxWidth: "600px" }}>
-      {/* ================= CREATE POST ================= */}
       <div className="card p-3 mb-4">
         <h5> Hey🙋‍♂️! Create A Post :</h5>
 
@@ -131,7 +126,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ================= FEED ================= */}
       {posts.length === 0 && (
         <p className="text-center text-muted">No posts yet 🥺</p>
       )}
@@ -142,12 +136,11 @@ export default function Home() {
         return (
           <div key={p._id} id={p._id} className="card mb-4">
             <div className="card-body">
-              {/* USER HEADER */}
               <div className="d-flex align-items-center mb-2">
                 <img
                   src={
                     user?.profilePic
-                      ? `http://localhost:5000/uploads/${user.profilePic}`
+                      ? `${BACKEND_URL}/uploads/${user.profilePic}`
                       : "https://via.placeholder.com/40"
                   }
                   width="40"
@@ -168,19 +161,16 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* POST TEXT */}
               <p className="mb-2">{p.text}</p>
 
-              {/* POST IMAGE */}
               {p.image && (
                 <img
-                  src={`http://localhost:5000/uploads/${p.image}`}
+                  src={`${BACKEND_URL}/uploads/${p.image}`}
                   className="img-fluid rounded mb-2"
                   alt="post"
                 />
               )}
 
-              {/* LIKE BELOW IMAGE */}
               <div className="mb-2">
                 <button
                   className="btn btn-sm btn-outline-danger"
@@ -190,7 +180,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* COMMENTS */}
               <div className="mt-2">
                 {p.comments?.map((c, i) => (
                   <p key={i} className="mb-1">

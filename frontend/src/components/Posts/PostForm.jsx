@@ -5,6 +5,8 @@ export default function PostForm() {
   const [text, setText] = useState("");
 
   const submitPost = async () => {
+    if (!text.trim()) return; // prevents empty posts (safe for deploy)
+
     await API.post("/posts", { text });
     setText("");
     window.location.reload();

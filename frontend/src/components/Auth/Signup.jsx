@@ -14,16 +14,10 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* =========================
-     HANDLE INPUT
-  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =========================
-     SIGNUP (STEP 1 - OTP / QR)
-  ========================= */
   const handleSignup = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -32,7 +26,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // ✅ CLEAR OLD AUTH STATE
+      // Clear old auth data
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       localStorage.removeItem("signupUserId");
@@ -44,29 +38,23 @@ export default function Signup() {
         password: form.password,
       });
 
-      /*
-        Backend returns:
-        { userId, qrCode }
-      */
+      // Store for 2FA / verification flow
       localStorage.setItem("signupUserId", res.data.userId);
       localStorage.setItem("signupQr", res.data.qrCode);
 
-      // ✅ GO TO VERIFY PAGE (NO REFRESH)
       navigate("/verify-signup", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Signup failed");
+      setError(
+        err.response?.data?.message || "Signup failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
-      <h3 className="text-center mb-3"> Hey🙋‍♂️! Create Account</h3>
-      <br></br>
+      <h3 className="text-center mb-3">Hey 🙋‍♂️! Create Account</h3>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -75,11 +63,12 @@ export default function Signup() {
         <input
           className="form-control mb-2 mt-2"
           name="username"
-          placeholder="Username "
+          placeholder="Username"
           value={form.username}
           onChange={handleChange}
           required
         />
+
         <b>Enter Your Email id :</b>
         <input
           className="form-control mb-2 mt-2"
@@ -90,7 +79,8 @@ export default function Signup() {
           onChange={handleChange}
           required
         />
-        <b>Enter Your Password : </b>
+
+        <b>Enter Your Password :</b>
         <input
           className="form-control mb-3 mt-2"
           name="password"
@@ -100,6 +90,7 @@ export default function Signup() {
           onChange={handleChange}
           required
         />
+
         <button className="btn btn-success w-100" disabled={loading}>
           {loading ? "Creating account..." : "Signup & Verify"}
         </button>

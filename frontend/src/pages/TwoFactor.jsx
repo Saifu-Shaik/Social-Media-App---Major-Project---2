@@ -7,9 +7,13 @@ export default function TwoFactor() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    API.get("/2fa/enable").then((res) => {
-      setQr(res.data.qrCode);
-    });
+    API.get("/2fa/enable")
+      .then((res) => {
+        setQr(res.data.qrCode);
+      })
+      .catch(() => {
+        setMsg("Failed to load QR code");
+      });
   }, []);
 
   const verify = async () => {

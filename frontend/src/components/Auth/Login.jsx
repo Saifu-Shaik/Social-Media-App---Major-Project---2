@@ -13,16 +13,10 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* =========================
-     HANDLE INPUT
-  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =========================
-     LOGIN (STEP 1 - OTP)
-  ========================= */
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -31,7 +25,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // ✅ CLEAR OLD SESSION COMPLETELY
+      // Clear old auth data
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       localStorage.removeItem("loginUserId");
@@ -41,28 +35,23 @@ export default function Login() {
         password: form.password,
       });
 
-      /*
-        Backend returns:
-        { userId, message: "OTP required" }
-      */
+      // Store user ID for OTP / verification flow
       localStorage.setItem("loginUserId", res.data.userId);
 
-      // ✅ GO TO OTP SCREEN (NO REFRESH NEEDED)
       navigate("/verify-login", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
-      <h3 className="mb-3 text-center">Hey User!👤 Login Here :</h3>
-      <br></br>
+      <h3 className="mb-3 text-center">Hey User! 👤 Login Here :</h3>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -78,7 +67,9 @@ export default function Login() {
           required
           onChange={handleChange}
         />
+
         <b>Please type Your Password :</b>
+
         <input
           className="form-control mb-3 mt-2"
           type="password"
@@ -95,7 +86,7 @@ export default function Login() {
       </form>
 
       <p className="text-center mt-3">
-        New user👤?{" "}
+        New user 👤?{" "}
         <Link to="/signup" className="fw-bold text-decoration-none">
           Create an account 👉
         </Link>

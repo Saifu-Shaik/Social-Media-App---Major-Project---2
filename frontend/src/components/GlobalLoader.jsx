@@ -5,7 +5,7 @@ export default function GlobalLoader() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShow(false); // ⏱ hide after 1 second
+      setShow(false);
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -18,8 +18,8 @@ export default function GlobalLoader() {
       style={{
         position: "fixed",
         inset: 0,
-        background: "#ffffff", // full white so nothing behind is visible
-        display: "flex",
+        background: "#ffffff",
+        display: "flex", // ✅ added (needed for proper centering in production)
         alignItems: "center",
         justifyContent: "center",
         zIndex: 9999,

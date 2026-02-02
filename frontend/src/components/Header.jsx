@@ -9,9 +9,6 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     LOAD USER (REUSABLE)
-  ========================= */
   const loadUser = async () => {
     const token = localStorage.getItem("token");
 
@@ -27,9 +24,12 @@ export default function Header() {
       setUser(res.data);
       localStorage.setItem("userId", res.data._id);
 
-      // socket connect
-      if (!socket.connected) {
+      // ✅ Safer Socket handling for Render
+      if (socket && !socket.connected) {
         socket.connect();
+      }
+
+      if (socket?.connected) {
         socket.emit("join", res.data._id);
       }
     } catch {
@@ -40,16 +40,10 @@ export default function Header() {
     }
   };
 
-  /* =========================
-     INITIAL LOAD + TOKEN SYNC
-  ========================= */
   useEffect(() => {
     loadUser();
 
-    // 🔥 SAME TAB LOGIN / LOGOUT FIX
     window.addEventListener("auth-change", loadUser);
-
-    // 🔥 MULTI TAB FIX
     window.addEventListener("storage", loadUser);
 
     return () => {
@@ -58,23 +52,18 @@ export default function Header() {
     };
   }, []);
 
-  /* =========================
-     LOGOUT (NO REFRESH REQUIRED)
-  ========================= */
   const logout = () => {
     localStorage.clear();
-    socket.disconnect();
+
+    if (socket?.connected) {
+      socket.disconnect();
+    }
+
     setUser(null);
-
-    // 🔥 FORCE APP TO REACT IMMEDIATELY
     window.dispatchEvent(new Event("auth-change"));
-
     navigate("/home", { replace: true });
   };
 
-  /* =========================
-     RENDER
-  ========================= */
   return (
     <nav className="navbar navbar-dark bg-dark px-3">
       <Link className="navbar-brand" to="/home">
@@ -108,7 +97,7 @@ export default function Header() {
             </span>
 
             <button className="btn btn-sm btn-danger ms-2" onClick={logout}>
-              Logout ➜]
+              Logout ➜
             </button>
           </>
         )}
