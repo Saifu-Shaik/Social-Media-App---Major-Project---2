@@ -1,9 +1,13 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
-  autoConnect: true,
-  withCredentials: true,
-  transports: ["websocket"],
-});
+const socket = io(
+  "https://social-media-app-major-project2-backend.onrender.com",
+  {
+    autoConnect: true,
+    withCredentials: true,
+    transports: ["websocket"],
+    secure: true,
+  },
+);
 
 export default socket;
