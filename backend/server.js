@@ -15,13 +15,13 @@ const server = http.createServer(app);
 
 /* ================= CORS ORIGINS ================= */
 
-// After deploying frontend, you will add it in Render env as FRONTEND_URL
+// 👉 REPLACE THIS WITH YOUR ACTUAL FRONTEND RENDER URL
 const allowedOrigins = [
   "http://localhost:3000", // local dev
-  process.env.FRONTEND_URL, // Render / Netlify frontend
+  "https://social-media-app-major-project2-frontend.onrender.com", // <-- CHANGE THIS
 ].filter(Boolean);
 
-/* ================= SOCKET.IO ================= */
+/* ================= SOCKET.IO (RENDER FIX) ================= */
 
 const io = new Server(server, {
   cors: {
@@ -29,6 +29,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ["websocket"], // ✅ VERY IMPORTANT FOR RENDER
 });
 
 io.on("connection", (socket) => {
@@ -66,6 +67,16 @@ app.use(
   }),
 );
 
+// Extra CORS safety (helps Render)
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    allowedOrigins[1] || "http://localhost:3000",
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -95,7 +106,7 @@ app.get("/", (req, res) => {
 
 mongoose
   .connect(process.env.MONGO_URI, {
-    dbName: "socialmedia", // ✅ ensures correct database
+    dbName: "socialmedia",
   })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((error) => {
