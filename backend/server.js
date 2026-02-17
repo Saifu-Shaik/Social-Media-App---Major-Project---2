@@ -17,10 +17,10 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://social-media-app-major-project2-frontend.onrender.com",
-].filter(Boolean);
+  "https://social-media-app-major-project-2-frontend.onrender.com",
+];
 
-/* ================= SOCKET.IO (FIXED FOR RENDER) ================= */
+/* ================= SOCKET.IO ================= */
 
 const io = new Server(server, {
   cors: {
@@ -28,10 +28,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
-
-  // IMPORTANT: polling first then websocket upgrade
   transports: ["polling", "websocket"],
-
   allowEIO3: true,
 });
 
@@ -65,7 +62,13 @@ app.set("io", io);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
     credentials: true,
   }),
 );
