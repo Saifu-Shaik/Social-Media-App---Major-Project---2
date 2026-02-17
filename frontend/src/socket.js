@@ -1,13 +1,15 @@
 import { io } from "socket.io-client";
 
-const socket = io(
-  "https://social-media-app-major-project2-backend.onrender.com",
-  {
-    autoConnect: true,
-    withCredentials: true,
-    transports: ["websocket"],
-    secure: true,
-  },
-);
+// Automatically choose backend
+const URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
+const socket = io(URL, {
+  withCredentials: true,
+
+  // IMPORTANT: allow fallback then upgrade
+  transports: ["polling", "websocket"],
+
+  autoConnect: false,
+});
 
 export default socket;
