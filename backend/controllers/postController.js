@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
-const fs = require("fs");
-const path = require("path");
+const cloudinary = require("../config/cloudinary");
+
+/* ================= CREATE POST ================= */
 
 exports.createPost = async (req, res) => {
   try {
@@ -15,7 +16,7 @@ exports.createPost = async (req, res) => {
     const post = await Post.create({
       user: req.user,
       text: text ? text.trim() : "",
-      image: req.file ? req.file.filename : null,
+      image: req.file ? req.file.path : null, // ✅ Cloudinary URL
     });
 
     const populatedPost = await Post.findById(post._id)
@@ -28,6 +29,8 @@ exports.createPost = async (req, res) => {
     res.status(500).json({ message: "Post creation failed" });
   }
 };
+
+/* ================= GET POSTS ================= */
 
 exports.getPosts = async (req, res) => {
   try {
@@ -57,21 +60,18 @@ exports.getPostsByUser = async (req, res) => {
   }
 };
 
+/* ================= LIKE ================= */
+
 exports.toggleLike = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
     const alreadyLiked = post.likes.includes(req.user);
 
-    if (alreadyLiked) {
-      post.likes.pull(req.user);
-    } else {
-      post.likes.push(req.user);
-    }
+    if (alreadyLiked) post.likes.pull(req.user);
+    else post.likes.push(req.user);
 
     await post.save();
 
@@ -86,19 +86,17 @@ exports.toggleLike = async (req, res) => {
   }
 };
 
+/* ================= COMMENT ================= */
+
 exports.addComment = async (req, res) => {
   try {
     const { text } = req.body;
 
-    if (!text || !text.trim()) {
+    if (!text || !text.trim())
       return res.status(400).json({ message: "Comment text required" });
-    }
 
     const post = await Post.findById(req.params.id);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
     post.comments.push({
       user: req.user,
@@ -118,25 +116,23 @@ exports.addComment = async (req, res) => {
   }
 };
 
+/* ================= DELETE POST ================= */
+
 exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (post.user.toString() !== req.user.toString()) {
+    if (post.user.toString() !== req.user.toString())
       return res.status(403).json({
         message: "You are not allowed to delete this post",
       });
-    }
 
+    // ✅ delete image from Cloudinary
     if (post.image) {
-      const imagePath = path.join(__dirname, "..", "uploads", post.image);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
+      const publicId = post.image.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`socialmedia_uploads/${publicId}`);
     }
 
     await post.deleteOne();
