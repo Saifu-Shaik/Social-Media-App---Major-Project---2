@@ -9,19 +9,18 @@ const { Server } = require("socket.io");
 dotenv.config();
 
 const app = express();
-app.set("trust proxy", 1); // IMPORTANT for Render
+app.set("trust proxy", 1); // required for Render cookies/ws
 
 const server = http.createServer(app);
 
 /* ================= CORS ORIGINS ================= */
 
-// 👉 REPLACE THIS WITH YOUR ACTUAL FRONTEND RENDER URL
 const allowedOrigins = [
-  "http://localhost:3000", // local dev
-  "https://social-media-app-major-project2-frontend.onrender.com", // <-- CHANGE THIS
+  "http://localhost:3000",
+  "https://social-media-app-major-project2-frontend.onrender.com",
 ].filter(Boolean);
 
-/* ================= SOCKET.IO (RENDER FIX) ================= */
+/* ================= SOCKET.IO (FIXED FOR RENDER) ================= */
 
 const io = new Server(server, {
   cors: {
@@ -29,7 +28,11 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket"], // ✅ VERY IMPORTANT FOR RENDER
+
+  // IMPORTANT: polling first then websocket upgrade
+  transports: ["polling", "websocket"],
+
+  allowEIO3: true,
 });
 
 io.on("connection", (socket) => {
@@ -67,16 +70,6 @@ app.use(
   }),
 );
 
-// Extra CORS safety (helps Render)
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    allowedOrigins[1] || "http://localhost:3000",
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -92,7 +85,7 @@ app.use("/api/posts", require("./routes/postRoutes"));
 app.use("/api/2fa", require("./routes/twoFactorRoutes"));
 app.use("/api/messages", require("./routes/messageRoutes"));
 
-/* ================= HEALTH CHECK (RENDER NEEDS THIS) ================= */
+/* ================= HEALTH CHECK ================= */
 
 app.get("/healthz", (req, res) => {
   res.status(200).send("OK");
