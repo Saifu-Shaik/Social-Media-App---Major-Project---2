@@ -2,9 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState("");
@@ -138,11 +135,7 @@ export default function Home() {
             <div className="card-body">
               <div className="d-flex align-items-center mb-2">
                 <img
-                  src={
-                    user?.profilePic
-                      ? `${BACKEND_URL}/uploads/${user.profilePic}`
-                      : "https://via.placeholder.com/40"
-                  }
+                  src={user?.profilePic || "https://via.placeholder.com/40"}
                   width="40"
                   height="40"
                   className="rounded-circle me-2"
@@ -165,7 +158,7 @@ export default function Home() {
 
               {p.image && (
                 <img
-                  src={`${BACKEND_URL}/uploads/${p.image}`}
+                  src={p.image}
                   className="img-fluid rounded mb-2"
                   alt="post"
                 />

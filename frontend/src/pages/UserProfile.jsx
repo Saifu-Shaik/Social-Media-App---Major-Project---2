@@ -2,9 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
 export default function UserProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,7 +54,6 @@ export default function UserProfile() {
   const isOwnProfile = loggedUserId === id;
 
   if (loading) return <h5 className="text-center mt-5">Loading profile...</h5>;
-
   if (!user)
     return <h5 className="text-center mt-5 text-danger">User not found</h5>;
 
@@ -69,14 +65,11 @@ export default function UserProfile() {
   return (
     <div className="container-fluid mt-4">
       <div className="row">
+        {/* LEFT SIDE */}
         <div className="col-md-6">
           <div className="card p-4 text-center h-100">
             <img
-              src={
-                user.profilePic
-                  ? `${BACKEND_URL}/uploads/${user.profilePic}`
-                  : "https://via.placeholder.com/150"
-              }
+              src={user.profilePic || "https://via.placeholder.com/150"}
               width="140"
               height="140"
               className="rounded-circle mx-auto mb-3"
@@ -131,6 +124,7 @@ export default function UserProfile() {
           <div style={{ width: "2px", background: "#ddd", height: "100%" }} />
         </div>
 
+        {/* POSTS */}
         <div className="col-md-5">
           <h4 className="mb-3">Posts 📝 :</h4>
 
@@ -144,11 +138,7 @@ export default function UserProfile() {
               onClick={() => navigate("/home", { state: { postId: p._id } })}
             >
               {p.image && (
-                <img
-                  src={`${BACKEND_URL}/uploads/${p.image}`}
-                  className="card-img-top"
-                  alt="post"
-                />
+                <img src={p.image} className="card-img-top" alt="post" />
               )}
               <div className="card-body">
                 <p>{p.text}</p>

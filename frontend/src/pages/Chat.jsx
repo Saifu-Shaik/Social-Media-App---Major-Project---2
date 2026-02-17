@@ -3,9 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
 import API from "../api/api";
 
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
 export default function Chat() {
   const { id: receiverId } = useParams();
   const navigate = useNavigate();
@@ -94,6 +91,7 @@ export default function Chat() {
   return (
     <div className="container mt-4">
       <div className="card p-3">
+        {/* ================= USER LIST ================= */}
         {!receiverId && (
           <>
             <h5>Chat Users 👥</h5>
@@ -110,11 +108,7 @@ export default function Chat() {
               >
                 <div className="d-flex align-items-center gap-2">
                   <img
-                    src={
-                      u.profilePic
-                        ? `${BACKEND_URL}/uploads/${u.profilePic}`
-                        : "https://via.placeholder.com/40"
-                    }
+                    src={u.profilePic || "https://via.placeholder.com/40"}
                     width="40"
                     height="40"
                     className="rounded-circle"
@@ -143,6 +137,7 @@ export default function Chat() {
           </>
         )}
 
+        {/* ================= CHAT WINDOW ================= */}
         {receiverId && (
           <>
             <div style={{ height: "350px", overflowY: "auto" }}>
@@ -150,9 +145,8 @@ export default function Chat() {
                 const senderId = m.sender?._id || m.sender;
                 const mine = senderId === myId;
 
-                const profilePic = m.sender?.profilePic
-                  ? `${BACKEND_URL}/uploads/${m.sender.profilePic}`
-                  : "https://via.placeholder.com/32";
+                const profilePic =
+                  m.sender?.profilePic || "https://via.placeholder.com/32";
 
                 return (
                   <div
