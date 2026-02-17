@@ -110,20 +110,35 @@ export default function Profile() {
             {error && <div className="alert alert-danger">{error}</div>}
 
             <div className="text-center mb-3">
-              <img
-                src={
-                  preview
-                    ? preview
-                    : user.profilePic
-                      ? user.profilePic
-                      : "https://via.placeholder.com/120"
-                }
-                width="120"
-                height="120"
-                className="rounded-circle"
-                style={{ objectFit: "cover" }}
-                alt="profile"
-              />
+              <div
+                style={{
+                  width: "170px",
+                  height: "170px",
+                  margin: "0 auto",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  border: "4px solid #e4e6eb",
+                  background: "#f0f2f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <img
+                  src={
+                    preview
+                      ? preview
+                      : user.profilePic ||
+                        "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
+                  alt="profile"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              </div>
             </div>
 
             <input
