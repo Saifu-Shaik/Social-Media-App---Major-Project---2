@@ -5,7 +5,6 @@ const speakeasy = require("speakeasy");
 const QRCode = require("qrcode");
 
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 
 // =============================
 // REGISTER
@@ -172,7 +171,7 @@ exports.verifyLoginOTP = async (req, res) => {
 };
 
 // =============================
-// FORGOT PASSWORD
+// FORGOT PASSWORD (UPDATED - FAST)
 // =============================
 exports.forgotPassword = async (req, res) => {
   try {
@@ -195,38 +194,11 @@ exports.forgotPassword = async (req, res) => {
 
     console.log("RESET PASSWORD LINK:", resetLink);
 
-    try {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      await transporter.sendMail({
-        from: `"Social Media App" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "Password Reset",
-        html: `
-          <h3>Password Reset Request</h3>
-          <p>Click the link below to reset your password:</p>
-          <a href="${resetLink}">${resetLink}</a>
-          <p>This link expires in 1 hour.</p>
-        `,
-      });
-
-      return res.json({ message: "Reset link sent to your email" });
-    } catch (mailError) {
-      console.log("EMAIL FAILED, USING LINK");
-
-      // only return reset link (no message)
-      return res.json({
-        resetLink: resetLink,
-      });
-    }
+    // 🚀 Directly return reset link (no email sending)
+    res.json({
+      message: "Reset link generated",
+      resetLink,
+    });
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
     res.status(500).json({ message: "Server error" });

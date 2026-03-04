@@ -6,28 +6,29 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [popup, setPopup] = useState("");
-  useEffect(() => {
-    if (popup) {
-      const timer = setTimeout(() => {
-        setPopup("");
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [popup]);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-  const [loading, setLoading] = useState(false);
-
   // Forgot Password States
   const [showForgot, setShowForgot] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
   const [resetLink, setResetLink] = useState("");
+
+  // Auto hide popup
+  useEffect(() => {
+    if (!popup) return;
+
+    const timer = setTimeout(() => {
+      setPopup("");
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [popup]);
 
   const handleChange = (e) => {
     setForm({
@@ -36,15 +37,17 @@ export default function Login() {
     });
   };
 
+  /* ================= LOGIN ================= */
+
   const handleLogin = async (e) => {
     e.preventDefault();
+
     if (loading) return;
 
     setPopup("");
     setLoading(true);
 
     try {
-      // Clear old login data
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       localStorage.removeItem("loginUserId");
@@ -67,26 +70,39 @@ export default function Login() {
     }
   };
 
-  // SEND RESET LINK
+  /* ================= RESET PASSWORD ================= */
+
   const sendResetLink = async () => {
+    if (!resetEmail.trim()) {
+      setResetMessage("Please enter your email");
+      return;
+    }
+
     try {
       setResetMessage("");
       setResetLink("");
 
       const res = await API.post("/auth/forgot-password", {
-        email: resetEmail,
+        email: resetEmail.trim(),
       });
 
-      setResetMessage(res.data.message || "Reset link generated.");
+      setResetMessage(res.data.message || "Reset link generated");
 
       if (res.data.resetLink) {
         setResetLink(res.data.resetLink);
       }
     } catch (err) {
       setResetMessage(
-        err.response?.data?.message || "Failed to generate reset link.",
+        err.response?.data?.message || "Failed to generate reset link",
       );
     }
+  };
+
+  const closeForgotModal = () => {
+    setShowForgot(false);
+    setResetEmail("");
+    setResetMessage("");
+    setResetLink("");
   };
 
   return (
@@ -147,7 +163,8 @@ export default function Login() {
         </Link>
       </p>
 
-      {/* Forgot Password Popup */}
+      {/* ================= RESET PASSWORD MODAL ================= */}
+
       {showForgot && (
         <div
           className="modal d-block"
@@ -171,7 +188,8 @@ export default function Login() {
 
               {resetLink && (
                 <div className="alert alert-success mt-2">
-                  Reset Link: <br />
+                  Reset Link:
+                  <br />
                   <a
                     href={resetLink}
                     target="_blank"
@@ -188,17 +206,12 @@ export default function Login() {
                   className="btn btn-primary btn-sm"
                   onClick={sendResetLink}
                 >
-                  Send Reset Link
+                  Generate Reset Link
                 </button>
 
                 <button
                   className="btn btn-secondary btn-sm"
-                  onClick={() => {
-                    setShowForgot(false);
-                    setResetEmail("");
-                    setResetMessage("");
-                    setResetLink("");
-                  }}
+                  onClick={closeForgotModal}
                 >
                   Cancel
                 </button>
