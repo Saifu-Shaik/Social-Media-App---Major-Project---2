@@ -9,6 +9,10 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Search states
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+
   const loadUser = async () => {
     const token = localStorage.getItem("token");
 
@@ -24,7 +28,6 @@ export default function Header() {
       setUser(res.data);
       localStorage.setItem("userId", res.data._id);
 
-      // ✅ Safer Socket handling for Render
       if (socket && !socket.connected) {
         socket.connect();
       }
@@ -64,11 +67,60 @@ export default function Header() {
     navigate("/home", { replace: true });
   };
 
+  // ✅ Search users
+  const handleSearch = async (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (value.length < 2) {
+      setResults([]);
+      return;
+    }
+
+    try {
+      const res = await API.get(`/users/search/${value}`);
+      setResults(res.data);
+    } catch {
+      setResults([]);
+    }
+  };
+
   return (
     <nav className="navbar navbar-dark bg-dark px-3">
       <Link className="navbar-brand" to="/home">
         ● Social Media App
       </Link>
+
+      {/* 🔎 SEARCH BAR */}
+      {user && (
+        <div className="position-relative me-3">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Search users..."
+            value={search}
+            onChange={handleSearch}
+          />
+
+          {results.length > 0 && (
+            <div
+              className="bg-white text-dark position-absolute w-100"
+              style={{ zIndex: 1000 }}
+            >
+              {results.map((u) => (
+                <div
+                  key={u._id}
+                  className="p-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/profile/${u._id}`)}
+                >
+                  {u.username}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="d-flex align-items-center gap-2">
         {loading ? null : !user ? (
