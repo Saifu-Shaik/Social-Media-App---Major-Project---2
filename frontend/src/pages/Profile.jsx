@@ -2,10 +2,17 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/api";
 
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
 export default function Profile() {
+  const [popup, setPopup] = useState("");
+  useEffect(() => {
+    if (popup) {
+      const timer = setTimeout(() => {
+        setPopup("");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [popup]);
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
 
@@ -15,7 +22,6 @@ export default function Profile() {
   const [preview, setPreview] = useState(null);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -32,7 +38,7 @@ export default function Profile() {
       setFile(null);
       setPreview(null);
     } catch (err) {
-      setError("Failed to load profile");
+      setPopup("Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -50,7 +56,7 @@ export default function Profile() {
 
   const updateProfile = async () => {
     try {
-      setError("");
+      setPopup("");
 
       const formData = new FormData();
       formData.append("username", username);
@@ -61,25 +67,20 @@ export default function Profile() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("✅ Profile updated successfully");
+      setPopup("✅ Profile updated successfully");
       fetchProfile();
     } catch (err) {
-      setError(err.response?.data?.message || "Update failed");
+      setPopup(err.response?.data?.message || "Update failed");
     }
   };
 
   const deletePost = async (postId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this post?",
-    );
-    if (!confirmDelete) return;
-
     try {
       await API.delete(`/posts/${postId}`);
-      alert("🗑️ Post deleted successfully");
+      setPopup("🗑️ Post deleted successfully");
       fetchProfile();
     } catch (err) {
-      alert("Failed to delete post");
+      setPopup("Failed to delete post");
     }
   };
 
@@ -88,7 +89,7 @@ export default function Profile() {
       await API.post(`/users/unfollow/${id}`);
       fetchProfile();
     } catch (err) {
-      console.error("Unfollow failed", err);
+      setPopup("Unfollow failed");
     }
   };
 
@@ -103,11 +104,14 @@ export default function Profile() {
   return (
     <div className="container mt-4">
       <div className="row">
+        {/* LEFT PROFILE CARD */}
         <div className="col-md-4">
           <div className="card p-4">
             <h5 className="mb-3">Your Profile Details 👤 :</h5>
 
-            {error && <div className="alert alert-danger">{error}</div>}
+            {popup && (
+              <div className="alert alert-info text-center">{popup}</div>
+            )}
 
             <div className="text-center mb-3">
               <div
@@ -143,7 +147,7 @@ export default function Profile() {
 
             <input
               className="form-control mb-2"
-              placeholder="Username "
+              placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -180,11 +184,14 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* RIGHT SECTION */}
         <div className="col-md-8">
+          {/* FOLLOWERS */}
           <div className="card mb-3">
             <div className="card-header">
               <b>Followers ({user.followers?.length || 0}) 👥</b>
             </div>
+
             <div className="card-body">
               {user.followers?.length === 0 ? (
                 <p className="text-muted">No followers yet 🥺</p>
@@ -203,10 +210,12 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* FOLLOWING */}
           <div className="card mb-4">
             <div className="card-header">
               <b>Following ({user.following?.length || 0}) 👥</b>
             </div>
+
             <div className="card-body">
               {user.following?.length === 0 ? (
                 <p className="text-muted">Not following anyone 🥺</p>
@@ -224,7 +233,7 @@ export default function Profile() {
                     </Link>
 
                     <button
-                      className="btn-primary btn-danger btn-outline-secondary"
+                      className="btn btn-sm btn-danger"
                       onClick={() => unfollowUser(f._id)}
                     >
                       Unfollow
@@ -235,7 +244,9 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* POSTS */}
           <h5>Your Posts 📝:</h5>
+
           {posts.length === 0 && (
             <p className="text-muted mt-3">No posts yet 📝</p>
           )}

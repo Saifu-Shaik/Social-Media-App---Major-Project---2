@@ -14,6 +14,7 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Fetch Profile
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -39,10 +40,17 @@ export default function UserProfile() {
     fetchProfile();
   }, [fetchProfile]);
 
+  // Follow / Unfollow
   const toggleFollow = async () => {
     try {
       setActionLoading(true);
-      await API.post(`/users/${isFollowing ? "unfollow" : "follow"}/${id}`);
+
+      if (isFollowing) {
+        await API.post(`/users/unfollow/${id}`);
+      } else {
+        await API.post(`/users/follow/${id}`);
+      }
+
       fetchProfile();
     } catch (err) {
       console.error("Follow action failed", err);
@@ -53,19 +61,25 @@ export default function UserProfile() {
 
   const isOwnProfile = loggedUserId === id;
 
-  if (loading) return <h5 className="text-center mt-5">Loading profile...</h5>;
-  if (!user)
-    return <h5 className="text-center mt-5 text-danger">User not found</h5>;
-
   const openChat = () => {
     if (!user?._id) return;
     navigate(`/chat/${user._id}`);
   };
 
+  // Loading State
+  if (loading) {
+    return <h5 className="text-center mt-5">Loading profile...</h5>;
+  }
+
+  // User Not Found
+  if (!user) {
+    return <h5 className="text-center mt-5 text-danger">User not found</h5>;
+  }
+
   return (
     <div className="container-fluid mt-4">
       <div className="row">
-        {/* LEFT SIDE */}
+        {/* LEFT PROFILE SECTION */}
         <div className="col-md-6">
           <div className="card p-4 text-center h-100">
             <img
@@ -78,6 +92,7 @@ export default function UserProfile() {
             />
 
             <h4>{user.username}</h4>
+
             <p className="text-muted">{user.bio || "No bio added"}</p>
 
             {!isOwnProfile && (
@@ -107,11 +122,13 @@ export default function UserProfile() {
 
             <hr />
 
+            {/* FOLLOW STATS */}
             <div className="d-flex justify-content-around">
               <div>
                 <b>{user.followers?.length || 0}</b>
                 <div className="text-muted">Followers</div>
               </div>
+
               <div>
                 <b>{user.following?.length || 0}</b>
                 <div className="text-muted">Following</div>
@@ -120,11 +137,18 @@ export default function UserProfile() {
           </div>
         </div>
 
+        {/* CENTER DIVIDER */}
         <div className="d-none d-md-block col-md-1 d-flex justify-content-center">
-          <div style={{ width: "2px", background: "#ddd", height: "100%" }} />
+          <div
+            style={{
+              width: "2px",
+              background: "#ddd",
+              height: "100%",
+            }}
+          />
         </div>
 
-        {/* POSTS */}
+        {/* POSTS SECTION */}
         <div className="col-md-5">
           <h4 className="mb-3">Posts 📝 :</h4>
 
@@ -135,13 +159,19 @@ export default function UserProfile() {
               key={p._id}
               className="card mb-4"
               style={{ cursor: "pointer" }}
-              onClick={() => navigate("/home", { state: { postId: p._id } })}
+              onClick={() =>
+                navigate("/home", {
+                  state: { postId: p._id },
+                })
+              }
             >
               {p.image && (
                 <img src={p.image} className="card-img-top" alt="post" />
               )}
+
               <div className="card-body">
                 <p>{p.text}</p>
+
                 <small className="text-muted">
                   ❤️ {p.likes?.length || 0} likes
                 </small>

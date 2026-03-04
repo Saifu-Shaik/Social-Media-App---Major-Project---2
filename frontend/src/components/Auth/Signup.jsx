@@ -1,9 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../../api/api";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Signup() {
   const navigate = useNavigate();
+
+  const [popup, setPopup] = useState("");
+  useEffect(() => {
+    if (popup) {
+      const timer = setTimeout(() => {
+        setPopup("");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [popup]);
 
   const [form, setForm] = useState({
     username: "",
@@ -11,22 +22,24 @@ export default function Signup() {
     password: "",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     if (loading) return;
 
-    setError("");
+    setPopup("");
     setLoading(true);
 
     try {
-      // Clear old auth data
+      // Clear old data
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       localStorage.removeItem("signupUserId");
@@ -38,13 +51,13 @@ export default function Signup() {
         password: form.password,
       });
 
-      // Store for 2FA / verification flow
+      // Save verification data
       localStorage.setItem("signupUserId", res.data.userId);
       localStorage.setItem("signupQr", res.data.qrCode);
 
       navigate("/verify-signup", { replace: true });
     } catch (err) {
-      setError(
+      setPopup(
         err.response?.data?.message || "Signup failed. Please try again.",
       );
     } finally {
@@ -56,10 +69,12 @@ export default function Signup() {
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
       <h3 className="text-center mb-3">Hey 🙋‍♂️! Create Account</h3>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {/* Popup Message */}
+      {popup && <div className="alert alert-danger text-center">{popup}</div>}
 
       <form onSubmit={handleSignup}>
         <b>Please Enter A Username :</b>
+
         <input
           className="form-control mb-2 mt-2"
           name="username"
@@ -70,6 +85,7 @@ export default function Signup() {
         />
 
         <b>Enter Your Email id :</b>
+
         <input
           className="form-control mb-2 mt-2"
           name="email"
@@ -81,6 +97,7 @@ export default function Signup() {
         />
 
         <b>Enter Your Password :</b>
+
         <input
           className="form-control mb-3 mt-2"
           name="password"

@@ -3,6 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 export default function Home() {
+  const [popup, setPopup] = useState("");
+  useEffect(() => {
+    if (popup) {
+      const timer = setTimeout(() => {
+        setPopup("");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [popup]);
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
@@ -41,8 +51,12 @@ export default function Home() {
 
   const requireAuth = () => {
     if (!token) {
-      alert("Please login or signup first");
-      navigate("/signup", { replace: true });
+      setPopup("⚠ Please login or signup first");
+
+      setTimeout(() => {
+        navigate("/signup", { replace: true });
+      }, 1500);
+
       return false;
     }
     return true;
@@ -61,11 +75,13 @@ export default function Home() {
 
       setText("");
       setImage(null);
+
       if (fileInputRef.current) fileInputRef.current.value = "";
 
       fetchPosts();
     } catch (err) {
       console.error("Post failed", err);
+      setPopup("Post creation failed");
     }
   };
 
@@ -77,6 +93,7 @@ export default function Home() {
       fetchPosts();
     } catch (err) {
       console.error("Like failed", err);
+      setPopup("Failed to like post");
     }
   };
 
@@ -90,16 +107,20 @@ export default function Home() {
       });
 
       setCommentText({ ...commentText, [id]: "" });
+
       fetchPosts();
     } catch (err) {
       console.error("Comment failed", err);
+      setPopup("Failed to add comment");
     }
   };
 
   return (
     <div className="container mt-4" style={{ maxWidth: "600px" }}>
+      {popup && <div className="alert alert-danger text-center">{popup}</div>}
+
       <div className="card p-3 mb-4">
-        <h5> Hey🙋‍♂️! Create A Post :</h5>
+        <h5>Hey🙋‍♂️! Create A Post :</h5>
 
         <textarea
           className="form-control mb-2 mt-3"

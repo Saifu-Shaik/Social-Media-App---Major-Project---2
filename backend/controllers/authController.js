@@ -4,6 +4,12 @@ const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const QRCode = require("qrcode");
 
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+
+// =============================
+// REGISTER
+// =============================
 exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -46,6 +52,9 @@ exports.register = async (req, res) => {
   }
 };
 
+// =============================
+// VERIFY SIGNUP OTP
+// =============================
 exports.verifySignupOTP = async (req, res) => {
   try {
     const { userId, token } = req.body;
@@ -55,6 +64,7 @@ exports.verifySignupOTP = async (req, res) => {
     }
 
     const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -71,17 +81,19 @@ exports.verifySignupOTP = async (req, res) => {
 
     user.isVerified = true;
     user.twoFactorEnabled = true;
+
     await user.save();
 
-    res.json({
-      message: "Signup successful. Please login.",
-    });
+    res.json({ message: "Signup successful. Please login." });
   } catch (error) {
     console.error("SIGNUP OTP ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+// =============================
+// LOGIN
+// =============================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -91,6 +103,7 @@ exports.login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -102,6 +115,7 @@ exports.login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -116,6 +130,9 @@ exports.login = async (req, res) => {
   }
 };
 
+// =============================
+// VERIFY LOGIN OTP
+// =============================
 exports.verifyLoginOTP = async (req, res) => {
   try {
     const { userId, token } = req.body;
@@ -125,6 +142,7 @@ exports.verifyLoginOTP = async (req, res) => {
     }
 
     const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -149,6 +167,100 @@ exports.verifyLoginOTP = async (req, res) => {
     });
   } catch (error) {
     console.error("LOGIN OTP ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// =============================
+// FORGOT PASSWORD
+// =============================
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    user.resetToken = token;
+    user.resetTokenExpire = Date.now() + 3600000;
+
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    console.log("RESET PASSWORD LINK:", resetLink);
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Social Media App" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Password Reset",
+        html: `
+          <h3>Password Reset Request</h3>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetLink}">${resetLink}</a>
+          <p>This link expires in 1 hour.</p>
+        `,
+      });
+
+      return res.json({ message: "Reset link sent to your email" });
+    } catch (mailError) {
+      console.log("EMAIL FAILED, USING LINK");
+
+      // only return reset link (no message)
+      return res.json({
+        resetLink: resetLink,
+      });
+    }
+  } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// =============================
+// RESET PASSWORD
+// =============================
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("RESET PASSWORD ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

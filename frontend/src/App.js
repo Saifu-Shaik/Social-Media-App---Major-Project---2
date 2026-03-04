@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+
 import { useEffect, useState } from "react";
 
 import Login from "./components/Auth/Login";
@@ -18,14 +19,15 @@ import Header from "./components/Header";
 import UserProfile from "./pages/UserProfile";
 import Chat from "./pages/Chat";
 import GlobalLoader from "./components/GlobalLoader";
+import ResetPassword from "./pages/ResetPassword";
 
 function AppRoutes() {
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("token") : null,
-  );
 
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+
+  // Page loading animation
   useEffect(() => {
     setLoading(true);
 
@@ -36,15 +38,20 @@ function AppRoutes() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Sync token across tabs
   useEffect(() => {
     const syncToken = () => {
       setToken(localStorage.getItem("token"));
     };
 
     window.addEventListener("storage", syncToken);
-    return () => window.removeEventListener("storage", syncToken);
+
+    return () => {
+      window.removeEventListener("storage", syncToken);
+    };
   }, []);
 
+  // Loader
   if (loading) {
     return <GlobalLoader />;
   }
@@ -54,6 +61,7 @@ function AppRoutes() {
       <Header />
 
       <Routes>
+        {/* PUBLIC ROUTES */}
         <Route path="/home" element={<Home />} />
 
         <Route
@@ -67,7 +75,12 @@ function AppRoutes() {
         />
 
         <Route path="/verify-signup" element={<VerifySignup />} />
+
         <Route path="/verify-login" element={<VerifyLogin />} />
+
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+        {/* PROTECTED ROUTES */}
 
         <Route
           path="/profile"
@@ -105,7 +118,10 @@ function AppRoutes() {
           }
         />
 
+        {/* DEFAULT ROUTES */}
+
         <Route path="/" element={<Navigate to="/home" replace />} />
+
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </>

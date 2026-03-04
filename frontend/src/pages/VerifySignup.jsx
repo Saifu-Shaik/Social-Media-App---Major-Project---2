@@ -5,11 +5,20 @@ import { useNavigate } from "react-router-dom";
 export default function VerifySignup() {
   const navigate = useNavigate();
 
+  const [popup, setPopup] = useState("");
+  useEffect(() => {
+    if (popup) {
+      const timer = setTimeout(() => {
+        setPopup("");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [popup]);
   const [userId, setUserId] = useState(null);
   const [qrCode, setQrCode] = useState(null);
 
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +28,7 @@ export default function VerifySignup() {
     const storedQr = localStorage.getItem("signupQr");
 
     if (!storedUserId || !storedQr) {
-      setError("Invalid or expired signup session");
+      setPopup("Invalid or expired signup session");
       return;
     }
 
@@ -29,13 +38,13 @@ export default function VerifySignup() {
 
   const verifyOtp = async () => {
     if (otp.length !== 6) {
-      setError("OTP must be 6 digits");
+      setPopup("OTP must be 6 digits");
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
+      setPopup("");
 
       await API.post("/auth/verify-signup", {
         userId,
@@ -45,20 +54,21 @@ export default function VerifySignup() {
       localStorage.removeItem("signupUserId");
       localStorage.removeItem("signupQr");
 
-      alert("Signup verified successfully. Please login.");
+      setPopup("Signup verified successfully. Please login.");
 
       navigate("/login", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid OTP");
+      setPopup(err.response?.data?.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
   };
 
-  if (error && !qrCode) {
+  if (!qrCode && popup) {
     return (
       <div className="container mt-5 text-center text-danger">
-        <h5>{error}</h5>
+        <h5>{popup}</h5>
+
         <button
           className="btn btn-link"
           onClick={() => navigate("/signup", { replace: true })}
@@ -81,6 +91,7 @@ export default function VerifySignup() {
     <div className="container mt-5 text-center" style={{ maxWidth: "420px" }}>
       <div className="card p-4">
         <h4 className="mb-2">Verify Your Account</h4>
+
         <p className="text-muted">
           Scan this QR code using <b>Google Authenticator</b>
         </p>
@@ -107,7 +118,7 @@ export default function VerifySignup() {
           {loading ? "Verifying..." : "Verify OTP"}
         </button>
 
-        {error && <div className="alert alert-danger mt-3">{error}</div>}
+        {popup && <div className="alert alert-danger mt-3">{popup}</div>}
       </div>
     </div>
   );

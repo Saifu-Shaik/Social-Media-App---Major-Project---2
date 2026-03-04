@@ -16,8 +16,12 @@ const userSchema = new mongoose.Schema(
 
     twoFactorSecret: { type: String, default: null },
     twoFactorEnabled: { type: Boolean, default: false },
+
+    // ✅ Added for Forgot Password feature
+    resetToken: { type: String, default: null },
+    resetTokenExpire: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("User", userSchema);

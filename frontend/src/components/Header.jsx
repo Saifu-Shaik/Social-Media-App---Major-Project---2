@@ -9,7 +9,7 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Search states
+  // Search states
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
 
@@ -63,11 +63,13 @@ export default function Header() {
     }
 
     setUser(null);
+
     window.dispatchEvent(new Event("auth-change"));
+
     navigate("/home", { replace: true });
   };
 
-  // ✅ Search users
+  // SEARCH USERS
   const handleSearch = async (e) => {
     const value = e.target.value;
     setSearch(value);
@@ -85,15 +87,21 @@ export default function Header() {
     }
   };
 
+  const openProfile = (id) => {
+    navigate(`/user/${id}`);
+    setResults([]);
+    setSearch("");
+  };
+
   return (
     <nav className="navbar navbar-dark bg-dark px-3">
       <Link className="navbar-brand" to="/home">
         ● Social Media App
       </Link>
 
-      {/* 🔎 SEARCH BAR */}
+      {/* SEARCH BAR */}
       {user && (
-        <div className="position-relative me-3">
+        <div className="position-relative me-3" style={{ width: "200px" }}>
           <input
             type="text"
             className="form-control form-control-sm"
@@ -104,7 +112,7 @@ export default function Header() {
 
           {results.length > 0 && (
             <div
-              className="bg-white text-dark position-absolute w-100"
+              className="bg-white text-dark position-absolute w-100 border"
               style={{ zIndex: 1000 }}
             >
               {results.map((u) => (
@@ -112,7 +120,7 @@ export default function Header() {
                   key={u._id}
                   className="p-2 border-bottom"
                   style={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/profile/${u._id}`)}
+                  onClick={() => openProfile(u._id)}
                 >
                   {u.username}
                 </div>
@@ -133,7 +141,7 @@ export default function Header() {
         ) : (
           <>
             <Link className="btn btn-outline-light btn-sm" to="/home">
-              Home 🏠︎
+              Home 🏠
             </Link>
 
             <Link className="btn btn-outline-light btn-sm" to="/chat">
