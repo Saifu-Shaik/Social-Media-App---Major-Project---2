@@ -105,7 +105,7 @@ export default function Header() {
           <input
             type="text"
             className="form-control form-control-sm"
-            placeholder="Search users..."
+            placeholder="🔎 Search users..."
             value={search}
             onChange={handleSearch}
           />
