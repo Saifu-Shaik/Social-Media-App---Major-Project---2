@@ -107,7 +107,22 @@ export default function Profile() {
         {/* LEFT PROFILE CARD */}
         <div className="col-md-4">
           <div className="card p-4">
-            <h5 className="mb-3">Your Profile Details 👤 :</h5>
+            <div className="d-flex align-items-center mb-2">
+              {/* 🔙 BACK BUTTON */}
+              <span
+                style={{
+                  cursor: "pointer",
+                  fontSize: "25px",
+                  marginRight: "15px",
+                }}
+                onClick={() => (window.location.href = "/home")}
+              >
+                ←
+              </span>
+
+              {/* TITLE */}
+              <h5 className="mb-0">Your Profile Details 👤 :</h5>
+            </div>
 
             {popup && (
               <div className="alert alert-info text-center">{popup}</div>

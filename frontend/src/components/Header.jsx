@@ -96,7 +96,7 @@ export default function Header() {
   return (
     <nav className="navbar navbar-dark bg-dark px-3">
       <Link className="navbar-brand" to="/home">
-        ● Social Media App
+        ● Social Media App 💭
       </Link>
 
       {/* SEARCH BAR */}
@@ -105,7 +105,7 @@ export default function Header() {
           <input
             type="text"
             className="form-control form-control-sm"
-            placeholder="🔎 Search users..."
+            placeholder="🔎 Search Users..."
             value={search}
             onChange={handleSearch}
           />

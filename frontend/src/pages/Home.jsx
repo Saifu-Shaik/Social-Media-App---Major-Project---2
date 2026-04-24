@@ -4,28 +4,29 @@ import API from "../api/api";
 
 export default function Home() {
   const [popup, setPopup] = useState("");
-  useEffect(() => {
-    if (popup) {
-      const timer = setTimeout(() => {
-        setPopup("");
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [popup]);
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [commentText, setCommentText] = useState({});
+  const [isPosting, setIsPosting] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const fileInputRef = useRef(null);
-
   const location = useLocation();
   const navigate = useNavigate();
 
   const highlightedPostId = location.state?.postId;
   const token = localStorage.getItem("token");
 
+  // 🔔 Popup auto hide
+  useEffect(() => {
+    if (popup) {
+      const timer = setTimeout(() => setPopup(""), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [popup]);
+
+  // 📥 Fetch posts
   const fetchPosts = async () => {
     try {
       const res = await API.get("/posts");
@@ -39,6 +40,7 @@ export default function Home() {
     fetchPosts();
   }, []);
 
+  // 🎯 Scroll to highlighted post
   useEffect(() => {
     if (highlightedPostId) {
       setTimeout(() => {
@@ -49,22 +51,24 @@ export default function Home() {
     }
   }, [posts, highlightedPostId]);
 
+  // 🔐 Auth check
   const requireAuth = () => {
     if (!token) {
       setPopup("⚠ Please login or signup first");
-
-      setTimeout(() => {
-        navigate("/signup", { replace: true });
-      }, 1500);
-
+      setTimeout(() => navigate("/signup", { replace: true }), 1500);
       return false;
     }
     return true;
   };
 
+  // 🚀 CREATE POST (FIXED)
   const createPost = async () => {
     if (!requireAuth()) return;
     if (!text.trim() && !image) return;
+    if (isPosting) return; // 🚫 prevent multiple clicks
+
+    setIsPosting(true);
+    setCooldown(5);
 
     const formData = new FormData();
     formData.append("text", text.trim());
@@ -75,7 +79,6 @@ export default function Home() {
 
       setText("");
       setImage(null);
-
       if (fileInputRef.current) fileInputRef.current.value = "";
 
       fetchPosts();
@@ -83,8 +86,21 @@ export default function Home() {
       console.error("Post failed", err);
       setPopup("Post creation failed");
     }
+
+    // ⏳ Cooldown Timer
+    let timeLeft = 5;
+    const interval = setInterval(() => {
+      timeLeft--;
+      setCooldown(timeLeft);
+
+      if (timeLeft === 0) {
+        clearInterval(interval);
+        setIsPosting(false);
+      }
+    }, 1000);
   };
 
+  // ❤️ Like
   const likePost = async (id) => {
     if (!requireAuth()) return;
 
@@ -97,6 +113,7 @@ export default function Home() {
     }
   };
 
+  // 💬 Comment
   const addComment = async (id) => {
     if (!requireAuth()) return;
     if (!commentText[id]?.trim()) return;
@@ -107,7 +124,6 @@ export default function Home() {
       });
 
       setCommentText({ ...commentText, [id]: "" });
-
       fetchPosts();
     } catch (err) {
       console.error("Comment failed", err);
@@ -119,6 +135,7 @@ export default function Home() {
     <div className="container mt-4" style={{ maxWidth: "600px" }}>
       {popup && <div className="alert alert-danger text-center">{popup}</div>}
 
+      {/* 📝 CREATE POST */}
       <div className="card p-3 mb-4">
         <h5>Hey🙋‍♂️! Create A Post :</h5>
 
@@ -127,27 +144,35 @@ export default function Home() {
           placeholder="What's on your mind Today?"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          disabled={!token}
+          disabled={!token || isPosting}
         />
 
         <input
           type="file"
           className="form-control mb-2 mt-2"
           accept="image/*"
-          disabled={!token}
+          disabled={!token || isPosting}
           ref={fileInputRef}
           onChange={(e) => setImage(e.target.files[0])}
         />
 
-        <button className="btn btn-success w-100 mt-3" onClick={createPost}>
-          Post it Out 😄
+        <button
+          className="btn btn-success w-100 mt-3"
+          onClick={createPost}
+          disabled={isPosting}
+        >
+          {isPosting
+            ? `⏳ Hang Tight! Your Post is Being Shared...... (${cooldown}s)`
+            : "Post it Out 😄"}
         </button>
       </div>
 
+      {/* 📭 No Posts */}
       {posts.length === 0 && (
         <p className="text-center text-muted">No posts yet 🥺</p>
       )}
 
+      {/* 📦 POSTS */}
       {posts.map((p) => {
         const user = p.user;
 
@@ -156,7 +181,10 @@ export default function Home() {
             <div className="card-body">
               <div className="d-flex align-items-center mb-2">
                 <img
-                  src={user?.profilePic || "https://via.placeholder.com/40"}
+                  src={
+                    user?.profilePic ||
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
                   width="40"
                   height="40"
                   className="rounded-circle me-2"
